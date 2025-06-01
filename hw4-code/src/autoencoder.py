@@ -41,17 +41,18 @@ class Autoencoder(nn.Module):
         for epoch in range(epochs):
             for X_batch in data_loader:
                 optimizer.zero_grad()
-                loss = loss_function(X_batch, self.forward(X_batch))
+                batch_tensor = torch.cat(X_batch)
+                loss = loss_function(batch_tensor, self.forward(batch_tensor))
                 loss.backward()
                 optimizer.step()
     
     def transform(self, X):
         #TODO: 2%
-        return self.encoder(X)
+        return self.encoder(torch.tensor(X, dtype=torch.float32)).detach().numpy()
     
     def reconstruct(self, X):
         #TODO: 2%
-        return self.decoder(self.encoder(X))
+        return self.decoder(torch.tensor(self.transform(X), dtype=torch.float32)).detach().numpy()
 
 
 """
