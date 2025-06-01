@@ -109,35 +109,35 @@ def main():
     # create a logistic regression model
     clf_pca = LogisticRegression(max_iter=10000, random_state=0)
     clf_ae = LogisticRegression(max_iter=10000, random_state=0)
-    #clf_deno_ae = LogisticRegression(max_iter=10000, random_state=0)
+    clf_deno_ae = LogisticRegression(max_iter=10000, random_state=0)
 
     # fit the model to the data
     print("Logistic Regression Training Start...")
     clf_pca.fit(X_train_transformed_pca, y_train)
     clf_ae.fit(X_train_transformed_ae, y_train)
-    #clf_deno_ae.fit(X_train_transformed_deno_ae, y_train)
+    clf_deno_ae.fit(X_train_transformed_deno_ae, y_train)
 
     # make predictions on new data
     y_pred_pca = clf_pca.predict(X_val_transformed_pca)
     y_pred_ae = clf_ae.predict(X_val_transformed_ae)
-    #y_pred_deno_ae = clf_deno_ae.predict(X_val_transformed_deno_ae)
+    y_pred_deno_ae = clf_deno_ae.predict(X_val_transformed_deno_ae)
     print(f"Acc from PCA: {compute_acc(y_pred_pca, y_val)}")
     print(f"Acc from Autoencoder: {compute_acc(y_pred_ae, y_val)}")
-    #print(f"Acc from DenoisingAutoencoder: {compute_acc(y_pred_deno_ae, y_val)}")
+    print(f"Acc from DenoisingAutoencoder: {compute_acc(y_pred_deno_ae, y_val)}")
 
     # Reconstruct Image: subject05_17.png
     img_vec = read_image()
     img_reconstruct_pca = pca.reconstruct(img_vec)
     img_reconstruct_ae = autoencoder.reconstruct(torch.tensor(img_vec, dtype=torch.float32))
-    #img_reconstruct_deno_ae = deno_autoencoder.reconstruct(torch.tensor(img_vec, dtype=torch.float32))
+    img_reconstruct_deno_ae = deno_autoencoder.reconstruct(torch.tensor(img_vec, dtype=torch.float32))
 
     reconstruction_loss_pca = reconstruction_loss(img_vec, img_reconstruct_pca)
     reconstruction_loss_ae = reconstruction_loss(img_vec, img_reconstruct_ae)
-    #reconstruction_loss_deno_ae = reconstruction_loss(img_vec, img_reconstruct_deno_ae)
+    reconstruction_loss_deno_ae = reconstruction_loss(img_vec, img_reconstruct_deno_ae)
 
     print(f"Reconstruction Loss with PCA: {reconstruction_loss_pca}")
     print(f"Reconstruction Loss with Autoencoder: {reconstruction_loss_ae}")
-    #print(f"Reconstruction Loss with DenoisingAutoencoder: {reconstruction_loss_deno_ae}")
+    print(f"Reconstruction Loss with DenoisingAutoencoder: {reconstruction_loss_deno_ae}")
     
     
 if __name__ == "__main__":
