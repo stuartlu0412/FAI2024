@@ -2,6 +2,7 @@ import torch
 from tqdm.auto import tqdm
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 import matplotlib.pyplot as plt
 
 """
@@ -31,10 +32,14 @@ class Autoencoder(nn.Module):
         #TODO: 5%
         optimizer = optim.Adam(self.parameters(), lr=0.001)
         loss_function = nn.MSELoss()
+        data_loader = DataLoader(
+            dataset=TensorDataset(torch.tensor(X, dtype=torch.float32)),
+            batch_size=batch_size,
+            shuffle=True
+        )
 
         for epoch in range(epochs):
-            for i in range(0, len(X), batch_size):
-                X_batch = X[i:i+batch_size]
+            for X_batch in data_loader:
                 optimizer.zero_grad()
                 loss = loss_function(X_batch, self.forward(X_batch))
                 loss.backward()
