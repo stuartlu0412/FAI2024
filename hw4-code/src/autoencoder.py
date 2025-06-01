@@ -9,20 +9,24 @@ import matplotlib.pyplot as plt
 Implementation of Autoencoder
 """
 class Autoencoder(nn.Module):
-    def __init__(self, input_dim: int, encoding_dim: int) -> None:
+    def __init__(self, input_dim: int, encoding_dim: int, optimizer: str = "Adam", architecture: str = "sequential") -> None:
         """
         Modify the model architecture here for comparison
         """
         super(Autoencoder, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Linear(input_dim, encoding_dim),
-            nn.Linear(encoding_dim, encoding_dim//2),
-            nn.ReLU()
-        )
-        self.decoder = nn.Sequential(
-            nn.Linear(encoding_dim//2, encoding_dim),
-            nn.Linear(encoding_dim, input_dim),
-        )
+        if architecture == "linear":
+            self.encoder = nn.Linear(input_dim, encoding_dim)
+            self.decoder = nn.Linear(encoding_dim, input_dim)
+        else:
+            self.encoder = nn.Sequential(
+                nn.Linear(input_dim, encoding_dim),
+                nn.Linear(encoding_dim, encoding_dim//2),
+                nn.ReLU()
+            )
+            self.decoder = nn.Sequential(
+                nn.Linear(encoding_dim//2, encoding_dim),
+                nn.Linear(encoding_dim, input_dim),
+            )
     
     def forward(self, x):
         #TODO: 5%
@@ -30,7 +34,10 @@ class Autoencoder(nn.Module):
     
     def fit(self, X, epochs=10, batch_size=32):
         #TODO: 5%
-        optimizer = optim.Adam(self.parameters(), lr=0.001)
+        if self.optimizer == "Adam":
+            optimizer = optim.Adam(self.parameters(), lr=0.001)
+        else:
+            optimizer = optim.SGD(self.parameters(), lr=0.001)
         loss_function = nn.MSELoss()
         data_loader = DataLoader(
             dataset=TensorDataset(torch.tensor(X, dtype=torch.float32)),
@@ -59,8 +66,8 @@ class Autoencoder(nn.Module):
 Implementation of DenoisingAutoencoder
 """
 class DenoisingAutoencoder(Autoencoder):
-    def __init__(self, input_dim, encoding_dim, noise_factor=0.2):
-        super(DenoisingAutoencoder, self).__init__(input_dim,encoding_dim)
+    def __init__(self, input_dim, encoding_dim, noise_factor=0.2, optimizer: str = "Adam", architecture: str = "sequential"):
+        super(DenoisingAutoencoder, self).__init__(input_dim,encoding_dim, optimizer, architecture)
         self.noise_factor = noise_factor
     
     def add_noise(self, x):
