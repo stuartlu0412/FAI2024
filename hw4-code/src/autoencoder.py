@@ -64,8 +64,25 @@ class DenoisingAutoencoder(Autoencoder):
     
     def add_noise(self, x):
         #TODO: 3%
-        raise NotImplementedError
+        mean = torch.zeros(x.size())
+        std = torch.zeros(x.size()) + self.noise_factor
+        return x + torch.normal(mean=mean, std=std)
     
     def fit(self, X, epochs=10, batch_size=32):
         #TODO: 4%
-        raise NotImplementedError
+
+        optimizer = optim.Adam(self.parameters(), lr=0.001)
+        loss_function = nn.MSELoss()
+        data_loader = DataLoader(
+                dataset=TensorDataset(torch.tensor(X, dtype=torch.float)),
+                batch_size=batch_size,
+                shuffle=False
+        )
+
+        for epoch in range(epochs):
+            for batch in data_loader:
+                batch_tensor = torch.cat([self.add_noise(x) for x in batch])
+                optimizer.zero_grad()
+                loss = loss_function(batch_tensor, self.forward(batch_tensor))
+                loss.backward()
+                optimizer.step()
