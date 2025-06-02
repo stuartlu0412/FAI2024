@@ -9,15 +9,19 @@ import matplotlib.pyplot as plt
 Implementation of Autoencoder
 """
 class Autoencoder(nn.Module):
-    def __init__(self, input_dim: int, encoding_dim: int, optimizer: str = "Adam", architecture: str = "sequential") -> None:
+    def __init__(
+        self,
+        input_dim: int,
+        encoding_dim: int,
+        optimizer_setting: str = "Adam",
+        architecture: str = "sequential"
+    ) -> None:
         """
         Modify the model architecture here for comparison
         """
-        super(Autoencoder, self).__init__()
-        if architecture == "linear":
-            self.encoder = nn.Linear(input_dim, encoding_dim)
-            self.decoder = nn.Linear(encoding_dim, input_dim)
-        else:
+        super().__init__()
+
+        if architecture == "sequential":
             self.encoder = nn.Sequential(
                 nn.Linear(input_dim, encoding_dim),
                 nn.Linear(encoding_dim, encoding_dim//2),
@@ -27,17 +31,26 @@ class Autoencoder(nn.Module):
                 nn.Linear(encoding_dim//2, encoding_dim),
                 nn.Linear(encoding_dim, input_dim),
             )
-    
+        elif architecture == "linear":
+   
+            self.encoder = nn.Linear(input_dim, encoding_dim)
+            self.decoder = nn.Linear(encoding_dim, input_dim)
+        else:
+            raise ValueError(f"Invalid architecture: {architecture}")
+
+        if optimizer_setting == "Adam":
+            self.optimizer = optim.Adam(self.parameters(), lr=0.01)
+        elif optimizer_setting == "SGD":
+            self.optimizer = optim.SGD(self.parameters(), lr=0.01)
+        else:
+            raise ValueError(f"Invalid optimizer: {optimizer_setting}")
+
     def forward(self, x):
         #TODO: 5%
         return self.decoder(self.encoder(x))
     
     def fit(self, X, epochs=10, batch_size=32):
         #TODO: 5%
-        if self.optimizer == "Adam":
-            optimizer = optim.Adam(self.parameters(), lr=0.001)
-        else:
-            optimizer = optim.SGD(self.parameters(), lr=0.001)
         loss_function = nn.MSELoss()
         data_loader = DataLoader(
             dataset=TensorDataset(torch.tensor(X, dtype=torch.float32)),
@@ -45,13 +58,13 @@ class Autoencoder(nn.Module):
             shuffle=True
         )
 
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             for X_batch in data_loader:
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 batch_tensor = torch.cat(X_batch)
                 loss = loss_function(batch_tensor, self.forward(batch_tensor))
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
     
     def transform(self, X):
         #TODO: 2%
@@ -66,8 +79,15 @@ class Autoencoder(nn.Module):
 Implementation of DenoisingAutoencoder
 """
 class DenoisingAutoencoder(Autoencoder):
-    def __init__(self, input_dim, encoding_dim, noise_factor=0.2, optimizer: str = "Adam", architecture: str = "sequential"):
-        super(DenoisingAutoencoder, self).__init__(input_dim,encoding_dim, optimizer, architecture)
+    def __init__(
+        self,
+        input_dim,
+        encoding_dim,
+        noise_factor=0.2,
+        optimizer_setting: str = "Adam",
+        architecture: str = "sequential"
+    ):
+        super().__init__(input_dim, encoding_dim, optimizer_setting = optimizer_setting, architecture = architecture)
         self.noise_factor = noise_factor
     
     def add_noise(self, x):
@@ -79,7 +99,6 @@ class DenoisingAutoencoder(Autoencoder):
     def fit(self, X, epochs=10, batch_size=32):
         #TODO: 4%
 
-        optimizer = optim.Adam(self.parameters(), lr=0.001)
         loss_function = nn.MSELoss()
         data_loader = DataLoader(
                 dataset=TensorDataset(torch.tensor(X, dtype=torch.float)),
@@ -87,10 +106,10 @@ class DenoisingAutoencoder(Autoencoder):
                 shuffle=False
         )
 
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs)):
             for batch in data_loader:
                 batch_tensor = torch.cat([self.add_noise(x) for x in batch])
-                optimizer.zero_grad()
+                self.optimizer.zero_grad()
                 loss = loss_function(batch_tensor, self.forward(batch_tensor))
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
